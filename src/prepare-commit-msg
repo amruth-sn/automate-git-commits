@@ -1,0 +1,68 @@
+#!/bin/bash
+
+COMMIT_MSG_FILE=$1
+
+MAX_LENGTH=1000
+
+
+
+if [ -z "$GROQ_API_KEY" ]; then
+  echo "Error: GROQ_API_KEY is not set."
+  exit 1
+fi
+
+escape_json() {
+    printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
+}
+
+git_diff=$(git diff --cached | head -c $MAX_LENGTH)
+
+if [ -z "$git_diff" ]; then
+    exit 0
+fi
+
+git_diff_escaped=$(escape_json "$git_diff")
+
+prompt="Generate a detailed commit message for the following changes without any extra explanations. The commit message should fit into one line. Here are the changes: $git_diff_escaped"
+prompt_escaped=$(escape_json "$prompt")
+
+payload=$(cat <<EOF
+{
+    "messages": [
+        {
+            "role": "user",
+            "content": $prompt_escaped
+        }
+    ],
+    "model": "llama3-groq-70b-8192-tool-use-preview",
+    "temperature": 1,
+    "max_tokens": 1024,
+    "top_p": 1,
+    "stream": false,
+    "stop": null
+}
+EOF
+)
+
+response=$(echo "$payload" | curl -s -X POST "https://api.groq.com/openai/v1/chat/completions" \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $GROQ_API_KEY" \
+    -d @-)
+
+commit_message=$(echo "$response" | python3 -c '
+import json, sys
+try:
+    response = json.load(sys.stdin)
+    print(response["choices"][0]["message"]["content"] if "choices" in response else "")
+except json.JSONDecodeError as e:
+    sys.exit(1)
+')
+
+if [ -z "$commit_message" ]; then
+    echo "Error: No commit message generated."
+    exit 1
+fi
+
+echo "$commit_message" > "$COMMIT_MSG_FILE"
+
+exit 0
