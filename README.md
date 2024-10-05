@@ -13,6 +13,7 @@ This repository provides a template to automate Git commit message generation us
 - [Using update_hooks.sh to Update Multiple Repositories](#using-hookssh-to-update-multiple-repositories)
 - [Editing the Template](#editing-the-template)
 - [License](#license)
+- [Questions?](#questions?)
 
 ## Setup
 
