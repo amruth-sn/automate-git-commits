@@ -1,29 +1,43 @@
 #!/bin/bash
 
 COMMIT_MSG_FILE=$1
+COMMIT_SOURCE=$2
+SHA1=$3
 
-MAX_LENGTH=1000
-# This is the max length of characters in your git diff output. 
+MAX_LENGTH = 12000
+# This is the max length of characters in your git diff output. I set this to a safe number like 12000. Generally we want to limit this because 
 # Feel free to change this to something larger if you have a large commit but be warned that if it's too large the Groq API will reject the payload.
 # In this case you will have to use git diff --minimal instead of git diff --cached below. 
 
-
-
-
+# Check if the API key environment variable is set
 if [ -z "$GROQ_API_KEY" ]; then
   echo "Error: GROQ_API_KEY is not set."
   exit 1
+fi
+
+# Check if a manual commit message is already in the commit message file
+if [ -s "$COMMIT_MSG_FILE" ]; then
+    exit 0
 fi
 
 escape_json() {
     printf '%s' "$1" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'
 }
 
-git_diff=$(git diff --cached | head -c $MAX_LENGTH)
+git_diff=$(git diff --cached)
 
 if [ -z "$git_diff" ]; then
     exit 0
 fi
+
+if [ ${#git_diff} -gt $((2 * MAX_LENGTH)) ]; then
+    echo "Git diff is way too large, falling back to git diff --minimal"
+    git_diff=$(git diff --cached --minimal)
+else
+    git_diff=$(echo "$git_diff" | head -c $MAX_LENGTH)
+fi
+
+
 
 git_diff_escaped=$(escape_json "$git_diff")
 
@@ -65,6 +79,11 @@ except json.JSONDecodeError as e:
 if [ -z "$commit_message" ]; then
     echo "Error: No commit message generated."
     exit 1
+fi
+
+echo "$commit_message" > "$COMMIT_MSG_FILE"
+
+exit 0
 fi
 
 echo "$commit_message" > "$COMMIT_MSG_FILE"
