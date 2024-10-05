@@ -55,7 +55,7 @@ The Git hooks for your repositories are usually stored in `.git/hooks/` for each
    ```
 
 4. **Set the Git Template Directory**:
-   Configure Git to use the template directory globally:
+   Configure Git to use the template directory globally. This is the crucial part that allows Git to use our custom template:
    
    ```bash
    git config --global init.templatedir '~/.git-templates'
