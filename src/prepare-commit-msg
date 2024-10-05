@@ -2,6 +2,9 @@
 
 COMMIT_MSG_FILE=$1
 
+# This is the max length of characters in your git diff output. 
+# Feel free to change this to something larger if you have a large commit but be warned that if it's too large the Groq API will reject the payload.
+# In this case you will have to use git diff --minimal instead of git diff --cached below. 
 MAX_LENGTH=1000
 
 
