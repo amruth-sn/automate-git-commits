@@ -4,7 +4,7 @@ COMMIT_MSG_FILE=$1
 COMMIT_SOURCE=$2
 SHA1=$3
 
-MAX_LENGTH = 12000
+MAX_LENGTH=12000
 # This is the max length of characters in your git diff output. I set this to a safe number like 12000. Generally we want to limit this because 
 # Feel free to change this to something larger if you have a large commit but be warned that if it's too large the Groq API will reject the payload.
 # In this case you will have to use git diff --minimal instead of git diff --cached below. 
@@ -16,7 +16,8 @@ if [ -z "$GROQ_API_KEY" ]; then
 fi
 
 # Check if a manual commit message is already in the commit message file
-if [ -s "$COMMIT_MSG_FILE" ]; then
+if grep -qvE '^\s*#|^\s*$' "$COMMIT_MSG_FILE"; then
+    echo "Commit message file contains meaningful content. Exiting script." >> "$LOG_FILE"
     exit 0
 fi
 
@@ -79,11 +80,6 @@ except json.JSONDecodeError as e:
 if [ -z "$commit_message" ]; then
     echo "Error: No commit message generated."
     exit 1
-fi
-
-echo "$commit_message" > "$COMMIT_MSG_FILE"
-
-exit 0
 fi
 
 echo "$commit_message" > "$COMMIT_MSG_FILE"
