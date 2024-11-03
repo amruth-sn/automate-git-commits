@@ -3,7 +3,7 @@
 HOOK_PATH="$HOME/.git-templates/hooks/prepare-commit-msg"
 
 REPOS=(
-    # Update with the local directory paths to all of your cloned repos
+    # Update with the local directory paths to all of your pre-existing cloned repos
     # You should only have to do this once.
 )
 
